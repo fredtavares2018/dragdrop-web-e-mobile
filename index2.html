@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <style>
+        .box {
+            position: relative;
+            cursor: pointer;
+            user-drag: none;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-drag: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <img src="SOMA.png" class="box">
+
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.2.2/rxjs.umd.min.js'></script>
+
+    <script id="rendered-js">
+        const {
+            fromEvent,
+            interval
+        } = rxjs;
+        const {
+            takeUntil,
+            mergeMap,
+            flatMap,
+            map,
+            merge
+        } = rxjs.operators;
+        // dom element
+        const target = document.querySelector(".box");
+        // event
+        const mousemove = fromEvent(document, "mousemove").pipe(
+            merge(fromEvent(document, "touchmove")));
+
+        const mouseup = fromEvent(target, "mouseup").pipe(
+            merge(fromEvent(target, "touchend")));
+
+        const mousedown = fromEvent(target, "mousedown").pipe(
+            merge(fromEvent(target, "touchstart")));
+
+        // create drag observerble
+        const drag = mousedown.pipe(
+            flatMap(md => {
+                let startX, startY, startLeft, startTop;
+
+                if (md.type.startsWith("mouse")) {
+                    startX = md.clientX + window.scrollX;
+                    startY = md.clientY + window.scrollY;
+                    startLeft = parseInt(md.target.style.left, 10) || 0;
+                    startTop = parseInt(md.target.style.top, 10) || 0;
+                    console.log(startTop, ' ', startLeft);
+                } else {
+                    startX = md.touches[0].clientX + window.scrollX;
+                    startY = md.touches[0].clientY + window.scrollY;
+                    startLeft = parseInt(md.target.style.left, 10) || 0;
+                    startTop = parseInt(md.target.style.top, 10) || 0;
+                }
+
+                return mousemove.pipe(
+                    map(mm => {
+                        if (mm.type.startsWith("mouse")) {
+                            return {
+                                left: startLeft + mm.x - startX,
+                                top: startTop + mm.y - startY
+                            };
+
+                        } else {
+                            return {
+                                left: startLeft + mm.touches[0].clientX - startX,
+                                top: startTop + mm.touches[0].clientY - startY
+                            };
+
+                        }
+                    }),
+                    takeUntil(mouseup));
+
+            }));
+
+
+
+        // subscription
+        const subscription = drag.subscribe(pos => {
+            target.style.top = pos.top + "px";
+            target.style.left = pos.left + "px";
+        });
+        //# sourceURL=pen.js
+    </script>
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+    </script>
+
+
+</body>
+
+</html>
